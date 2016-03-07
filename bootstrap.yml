@@ -12,14 +12,13 @@
     - name: Install postgresql and other packages
       apt: pkg={{item}} state=present update_cache=yes
       with_items:
+        - libpq-dev
         - python-psycopg2
         - postgresql
-    - name: Create database
-      become_user: postgres
-      postgresql_db: name={{dbname}}
+        - postgresql-contrib
     - name: Create database user
       become_user: postgres
-      postgresql_user: db={{dbname}} name={{dbuser}} password={{dbpassword}} priv=ALL
+      postgresql_user: name=pguser password=foobar role_attr_flags=SUPERUSER
     - name: Configure locale
       lineinfile: dest=/etc/default/locale line={{ item }}
       with_items:
@@ -36,9 +35,9 @@
     - name: Install dependencies
       apt: pkg={{item}} state=present update_cache=yes
       with_items:
+        - libpq-dev
         - build-essential
         - git
-        - libpq-dev
         - nodejs
     - name: Install rails and pg gems
       gem: name={{item}} state=present user_install=no
