@@ -1,0 +1,47 @@
+---
+
+- name: Configure database
+  hosts: database
+  become: yes
+  become_method: sudo
+  vars:
+    dbname: railsbox
+    dbuser: railsbox
+    dbpassword: railsbox
+  tasks:
+    - name: Install postgresql and other packages
+      apt: pkg={{item}} state=present update_cache=yes
+      with_items:
+        - python-psycopg2
+        - postgresql
+    - name: Create database
+      become_user: postgres
+      postgresql_db: name={{dbname}}
+    - name: Create database user
+      become_user: postgres
+      postgresql_user: db={{dbname}} name={{dbuser}} password={{dbpassword}} priv=ALL
+    - name: Configure locale
+      lineinfile: dest=/etc/default/locale line={{ item }}
+      with_items:
+        - 'LANGUAGE="en_US.UTF-8"'
+        - 'LC_ALL="en_US.UTF-8"'
+
+- name: Configure webserver
+  hosts: webserver
+  become: yes
+  become_method: sudo
+  roles:
+    - rvm_io.rvm1-ruby
+  tasks:
+    - name: Install dependencies
+      apt: pkg={{item}} state=present update_cache=yes
+      with_items:
+        - build-essential
+        - git
+        - libpq-dev
+        - nodejs
+    - name: Install rails and pg gems
+      gem: name={{item}} state=present user_install=no
+      with_items:
+        - rails
+        - pg
